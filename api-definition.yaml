@@ -1,0 +1,23 @@
+openapi: 3.0.3
+info:
+  title: 'ChartAI Snipper API'
+  version: '1.0.0'
+  contact:
+    name: chartAI
+    email: admin@chartai.tech
+    url: https://chartai.tech/
+tags:
+  - name: Metadata
+    description: Metadata related requests
+externalDocs:
+  url: https://chartai.tech/
+  description: ChartAi Documentation
+paths:
+  /:
+    get:
+      operationId: getMetadata
+      summary: Get metadata from the root of the API
+      tags: ['Metadata']
+      responses:
+        '200':
+          description: OK

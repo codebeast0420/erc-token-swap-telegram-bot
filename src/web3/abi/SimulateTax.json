@@ -1,0 +1,57 @@
+{
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "token",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "weth",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address[]",
+                    "name": "pairChain",
+                    "type": "address[]"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "feeDeduct",
+                    "type": "uint256"
+                }
+            ],
+            "name": "testTax",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "totalBuyAmount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "boughtAmount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "totalSellAmount",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "soldAmount",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "payable",
+            "type": "function"
+        },
+        {
+            "stateMutability": "payable",
+            "type": "receive"
+        }
+    ]
+}
