@@ -80,7 +80,6 @@ export async function executeMulticall(chain: string, multicall: any, cc1: Contr
 	} catch (err) {
 		if (errorText) {
 			Logging.error(errorText)
-			console.log(chain, cc1.length, cc1.map(c => c.calls.length).reduce((prev, cur) => prev + cur, 0), cc1.map(c => c.reference))
 			console.error(err)
 		}
 		if (throwText) {

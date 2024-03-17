@@ -83,6 +83,7 @@ export const chainConfig = {
 			// 'https://goerli.blockpi.network/v1/rpc/public',
 			// 'https://rpc.ankr.com/eth_goerli',
 			// 'https://go.getblock.io/bdf1798a9a49407cb5157896782e6c19', // testnet
+			'https://mainnet.infura.io/v3/7535811d19b1410e98c261fbb638651a',
 			'https://go.getblock.io/a62965ecb76f4390860a027a54738765',
 			'https://rpc.mevblocker.io/', // anti-MEV RPC,             'https://rpc.flashbots.net/', // anti-MEV RPC
 			'https://mainnet.infura.io/v3/7535811d19b1410e98c261fbb638651a',

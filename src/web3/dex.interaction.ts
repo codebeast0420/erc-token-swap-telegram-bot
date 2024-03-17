@@ -32,11 +32,9 @@ import { getBestPathFromToken, getBestPathToToken } from './dex/common/bestpath'
 const { ethers } = require('ethers');
 
 export async function swapETHForToken(telegramId: string, chain: string, swapParams: any, sendParams: any, customLabel?: string) {
-	console.log("swapETHForToken");
 	const user = await getAppUser(telegramId)
 
 	const tokenInfo = await getTokenInfo(chain, swapParams.token)
-	console.log("new tokenInfo", tokenInfo.marketCap)
 	const tokenPrice = await getTokenPrice(telegramId, chain, tokenInfo.address)
 
 	const BN = getBN();
@@ -59,29 +57,31 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 		buyGasPrice = BN(pgInWei).eq(BN(0)) === true ? BN(gasPriceInWei) : BN(pgInWei)
 	}
 
-	let amountOutMin = '0'
+	// let amountOutMin = '0'
 	let tokenAmount = '0'
-	let slippage = swapParams.slippage ? swapParams.slippage : setting.slippage
+	// let slippage = swapParams.slippage ? swapParams.slippage : setting.slippage
 
-	// let bestPath = {
-	// 	path: ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", tokenInfo.address]
-	// }
 
 	let bestPath = {
-		path: ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", tokenInfo.address]
+		path: [chainConfig[chain].tokens[0], tokenInfo.address]
 	}
-	
-	const provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/7535811d19b1410e98c261fbb638651a");
-	const routerAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
+
+	const provider = new ethers.providers.JsonRpcProvider(chainConfig[chain].rpcUrls[0]);
+	const routerAddress = chainConfig[chain].router;
 	const abi = UniRouter.abi
 	const contract = new ethers.Contract(routerAddress, abi, provider);
-	console.log("eth params", sendParams, nativeDecimals);
+	// console.log("eth params", sendParams, nativeDecimals);
 	// const ethAmountDecimal = BN(sendParams.value).div(BN(`1e${nativeDecimals}`)).toString()
 	// console.log("ethAmountDecimal", ethAmountDecimal);
+	// console.log("send params", sendParams.value)
 	const amountOut = await contract.getAmountsOut(sendParams.value, bestPath.path);
-	const integers = amountOut.map(bn => bn.toNumber().toString());
-	console.log("amountOut", integers.join(''))
 	
+	tokenAmount = ethers.utils.formatUnits(amountOut[1], tokenInfo.decimals);
+	// console.log("tokenAmount", tokenAmount);
+
+	// tokenAmount = BN(amountOut[1]).div(BN(`1e${nativeDecimals}`)).toString();
+	// console.log("amountOut", BN(tokenAmount).times(BN(`1e${nativeDecimals}`)).integerValue().toString())
+
 
 
 	// if (bestPath?.version === 2) {
@@ -92,11 +92,8 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 	// 	throw new Error(INVALID_OPERATION + `\nFailed to calculate <b>${tokenInfo.symbol}</b> amount to buy by <b>${ethAmountDecimal} ${nativeSymbol}</b>`)
 	// }
 
-	// const factory = bestPath.factory
-	const factory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
-
-	tokenAmount = integers.join('')
-	// amountOutMin = BN(tokenAmount).times(BN(100).minus(BN(slippage))).div(BN(100)).integerValue().toString()
+	// amountOutMin = BN(amountOut[1]).times(BN(100).minus(BN(slippage))).div(BN(100)).integerValue().toString()
+	// console.log("amountOutMin", amountOutMin)
 
 	// const dexFound: any = await DexInfoModel.findOne({ chain: chain, factory: factory })
 	// const routerAddress = dexFound.router
@@ -106,7 +103,7 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 	let tx
 	{
 		let abi = Router.abi
-		let args = [amountOutMin, bestPath.path, swapParams.recipient, '0xffffffff']
+		let args = [BN(tokenAmount).times(BN(`1e${tokenInfo.decimals}`)).integerValue().toString(), bestPath.path, swapParams.recipient, '0xffffffff']
 		tx = await sendTxn(telegramId, chain,
 			{
 				abi,
@@ -534,6 +531,7 @@ export async function swapTokenForETH(telegramId: string, chain: string, swapPar
 
 
 export async function userSwapETHForTokens(telegramId: string, chain: string, tokenAddress: string, amount: string) {
+	
 	const w = await getWallet(telegramId);
 
 	const BN = getBN();
@@ -570,7 +568,6 @@ export async function userSwapETHForTokensByTokenAmount(telegramId: string, chai
 	const decimals = await getNativeCurrencyDecimal(chain);
 	const ethSymbol = await getNativeCurrencySymbol(chain);
 	const tokenInfo = await queryTokenInfoOnChain(telegramId, chain, tokenAddress, w.address);
-	console.log("tokenInfo", tokenInfo)
 	let amn = convertValue(tokenInfo.balance, amount, BN)
 
 	// let bestPath = {
@@ -578,7 +575,7 @@ export async function userSwapETHForTokensByTokenAmount(telegramId: string, chai
 	// }
 
 	let bestPath = {
-		path: ["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", tokenInfo.address]
+		path: [chainConfig[chain].tokens[0], tokenInfo.address]
 	}
 
 	// try {
@@ -586,15 +583,17 @@ export async function userSwapETHForTokensByTokenAmount(telegramId: string, chai
 	// } catch (err) {
 	// }
 
-	console.log("amountIn start")
-	const provider = new ethers.providers.JsonRpcProvider("https://mainnet.infura.io/v3/7535811d19b1410e98c261fbb638651a");
-	const routerAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'
+
+	const provider = new ethers.providers.JsonRpcProvider(chainConfig[chain].rpcUrls[0]);
+	const routerAddress = chainConfig[chain].router;
 	const abi = UniRouter.abi
-	console.log("amn", amn);
+	
+
+
 	const contract = new ethers.Contract(routerAddress, abi, provider);
 	const amountIn = await contract.getAmountsIn(amn, bestPath.path);
 	const integers = amountIn.map(bn => bn.toNumber().toString());
-	console.log("amountIn", integers.join(''))
+
 
 	// amountIn = await getAmountsInExtV2(chain, amn, bestPath)
 	// if (bestPath.version === 2) {
@@ -620,7 +619,7 @@ export async function userSwapETHForTokensByTokenAmount(telegramId: string, chai
 		},
 		{
 			// value: BN(amountIn).times(BN(`1e${decimals}`)).integerValue().toString(),
-			value: integers.join(''),
+			value: BN(integers[0]).times(BN(`1e${tokenInfo.decimals}`)).integerValue().toString(),
 			address: w
 		}
 	);
