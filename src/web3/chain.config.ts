@@ -80,6 +80,8 @@ export const chainConfig = {
 		},
 		chainId: 1,
 		rpcUrls: [
+			// 'https://goerli.blockpi.network/v1/rpc/public',
+			// 'https://rpc.ankr.com/eth_goerli',
 			// 'https://go.getblock.io/bdf1798a9a49407cb5157896782e6c19', // testnet
 			'https://go.getblock.io/a62965ecb76f4390860a027a54738765',
 			'https://rpc.mevblocker.io/', // anti-MEV RPC,             'https://rpc.flashbots.net/', // anti-MEV RPC
@@ -90,6 +92,7 @@ export const chainConfig = {
 			'https://nd-652-098-924.p2pify.com/02da8a5071fc3168ee861acd034a1338', // private node
 		],
 		wsUrls: [
+			// 'wss://goerli.gateway.tenderly.co',
 			// 'wss://go.getblock.io/5d69a662c1ca41a492b35f5c8028abbd', // testnet
 			'wss://go.getblock.io/63fd812e1ef94d168d8c5b134e21ab77',
 			'wss://eth.getblock.io/mainnet/45457240-8f2e-4923-93ea-de09a4da63a0/', // dedicated node at getblock.io
@@ -102,6 +105,8 @@ export const chainConfig = {
 		router: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d',
 		antimevSwapper: '0xe6017E4466923f2e9Bf83F9C1e4aBa2686757dC4',
 		antimevRPC: 'https://eth-protect.rpc.blxrbdn.com',
+		// antimevRPC: 'https://goerli.blockpi.network/v1/rpc/public',
+
 		factory: '0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f',
 		feeDistributor: '0xa4b19e1abff282e7feb467ff706f116012b4b829',
 		simulator: '0x16b7be202c23e8f1a138b3a2dd77b2e7700a2494', // {without deduct fee - '0x74EE2ffb5815E213BC05a1c0732eF2058aC3D303'}

@@ -330,7 +330,7 @@ export async function sendTxnAdvanced(
 			}
 
 			const txCommit = async () => {
-				console.log('pending tx', (new Date()).getTime(), txData, signedTx)
+				console.log('pending tx__________', (new Date()).getTime(), txData, signedTx)
 				if (BN(sendParams.bribe || '0').gt(0)) {
 					return await flashBotSend(telegramId, chain, signedTx.rawTransaction, { targetTx: sendParams.block0Tx })
 				} else {

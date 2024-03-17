@@ -72,11 +72,12 @@ export async function getAmountsOutExtV2(chain: string, amount: string, pathInfo
 export async function getAmountsInExtV2(chain: string, amount: string, pathInfo: any) {
 	const BN = getBN()
 
-	if (pathInfo.version !== 2) {
-		throw new Error(`[getAmountsInExtV2] ${chain}:${pathInfo.factory} - dex version is not 2`)
-	}
+	// if (pathInfo.version !== 2) {
+	// 	throw new Error(`[getAmountsInExtV2] ${chain}:${pathInfo.factory} - dex version is not 2`)
+	// }
 
 	const path = pathInfo.path
+	console.log("path", path)
 	for (let i = path.length - 1; i > 0; i--) {
 		const tres = await Promise.all([
 			PairInfoModel.find({
