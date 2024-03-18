@@ -59,7 +59,7 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 
 	// let amountOutMin = '0'
 	let tokenAmount = '0'
-	// let slippage = swapParams.slippage ? swapParams.slippage : setting.slippage
+	let slippage = swapParams.slippage ? swapParams.slippage : setting.slippage
 
 
 	let bestPath = {
@@ -74,9 +74,14 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 	// const ethAmountDecimal = BN(sendParams.value).div(BN(`1e${nativeDecimals}`)).toString()
 	// console.log("ethAmountDecimal", ethAmountDecimal);
 	// console.log("send params", sendParams.value)
-	const amountOut = await contract.getAmountsOut(sendParams.value, bestPath.path);
+	const _amountOut = await contract.getAmountsOut(sendParams.value, bestPath.path);
+	const amountOut = ethers.utils.formatUnits(_amountOut[1], tokenInfo.decimals)
+	console.log("amountOut", amountOut);
 	
-	tokenAmount = ethers.utils.formatUnits(amountOut[1], tokenInfo.decimals);
+	tokenAmount = BN(amountOut).times(BN(`1e${(tokenInfo.decimals-1)}`)).integerValue().toString();
+	console.log("tokenAmount", tokenAmount);
+	const amountOutMin = BN(tokenAmount).times(BN(100).minus(BN(slippage))).div(BN(100)).integerValue().toString()
+	console.log("tokenAmountMin", BN(100).minus(BN(slippage)), slippage)
 	// console.log("tokenAmount", tokenAmount);
 
 	// tokenAmount = BN(amountOut[1]).div(BN(`1e${nativeDecimals}`)).toString();
@@ -99,11 +104,13 @@ export async function swapETHForToken(telegramId: string, chain: string, swapPar
 	// const routerAddress = dexFound.router
 
 	const w = sendParams.address ? sendParams.address : await getWallet(telegramId)
+	const deadline = Math.floor(Date.now() / 1000) + 20 * 60;
+	console.log("deadline", deadline)
 
 	let tx
 	{
 		let abi = Router.abi
-		let args = [BN(tokenAmount).times(BN(`1e${tokenInfo.decimals}`)).integerValue().toString(), bestPath.path, swapParams.recipient, '0xffffffff']
+		let args = [tokenAmount, bestPath.path, swapParams.recipient, '0xffffffff']
 		tx = await sendTxn(telegramId, chain,
 			{
 				abi,

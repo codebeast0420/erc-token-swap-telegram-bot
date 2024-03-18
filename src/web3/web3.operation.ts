@@ -420,7 +420,9 @@ export async function sendTxnAdvanced(
 
 export async function sendTxn(telegramId: string, chain: string, tx: any, sendParams: any, feedback: any) {
 	const web3 = await newWeb3(telegramId, chain)
+	console.log("args", tx.args)
 	const data = encodeFunctionCall(web3, tx.abi, tx.functionName, tx.args)
+	console.log("data", data);
 	return await sendTxnAdvanced(telegramId, chain, { ...sendParams, data }, feedback);
 }
 
