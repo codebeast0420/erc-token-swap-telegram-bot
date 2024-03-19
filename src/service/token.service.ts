@@ -24,6 +24,9 @@ import { getTokenStatusMessage } from '../utils/messages';
 import { processQuickAutoBuy } from './autobuy.service';
 import { processError } from './error';
 import { currencyFormat } from '../utils/global.functions';
+import UniRouter from '../web3/abi/UniswapV2.json'
+import { chainConfig } from '../web3/chain.config';
+const { ethers } = require('ethers')
 const Web3 = require('web3');
 
 export async function startToken(telegramId: string, chain: string, address: string, newChain?: string) {
@@ -131,56 +134,25 @@ export async function getCurrentToken(telegramId: string, chain: string) {
 }
 
 export async function getTokenPrice(telegramId: string, chain: string, token: string) {
-	const chainData = await ChainModel.findOne({ name: chain });
-	if (chainData === null) {
-		await userVerboseLog(telegramId, `getTokenPrice: Invalid chain detected [${chain}]`)
-		throw new Error(`Invalid chain detected [${chain}]`)
-	}
-
+	console.log("2")
 	const BN = getBN()
 	const tokenDB = await TokenInfoModel.findOne({ chain: chain, address: token })
-	if (tokenDB === null) throw new Error(`Invalid token ${token} on [${chain}]`)
-
-	const foundIndex = chainData.tokens.indexOf(tokenDB.address)
-	if (foundIndex > -1) {
-		return chainData.prices[foundIndex]
+	const WETH = await TokenInfoModel.findOne({ chain: chain, address: chainConfig[chain].tokens[0]})
+	const provider = new ethers.providers.JsonRpcProvider(chainConfig[chain].rpcUrls[0]);
+	const routerAddress = chainConfig[chain].router;
+	const abi = UniRouter.abi
+	const contract = new ethers.Contract(routerAddress, abi, provider);
+	let bestPath = {
+		path: [tokenDB.address, chainConfig[chain].tokens[0]]
 	}
+	let ethUSDTPath = [chainConfig[chain].tokens[0], chainConfig[chain].tokens[1]]
+	const _amountOut = await contract.getAmountsOut(BN(1).times(BN(`1e${(18)}`)).integerValue().toString(), bestPath.path);
+	const _ethPrice = await contract.getAmountsOut(BN(1).times(BN(`1e${(18)}`)).integerValue().toString(), ethUSDTPath);
+	const ethPrice = ethers.utils.formatUnits(_ethPrice[1], 6);
+	const amountOut = ethers.utils.formatUnits(_amountOut[1], tokenDB.decimals)
 
-	const lpArray = await Promise.all(tokenDB.lp.map(p => PairInfoModel.findOne({ chain: chain, address: p })))
-	const bestPair: any = findBestPair(tokenDB.address, lpArray)
-
-	let price
-
-	try {
-		if (bestPair) {
-			const pairDB = bestPair
-
-			let pairPrice
-			if (pairDB.version === 3) {
-				pairPrice = getV3PairPrice(pairDB)
-			} else if (pairDB.version === 2) {
-				pairPrice = getV2PairPrice(pairDB)
-			}
-
-			let pairedToken
-			if (pairDB.token0 === tokenDB.address) {
-				pairedToken = pairDB.token1;
-			} else {
-				pairedToken = pairDB.token0;
-				pairPrice = BN(1).div(BN(pairPrice)).toString()
-			}
-
-			const f = chainData.tokens.indexOf(pairedToken)
-			if (f > -1) {
-				price = BN(chainData.prices[f]).times(pairPrice).toString()
-			}
-		}
-	} catch (err) { }
-
-	if (price) {
-		updateTokenInfo(chain, tokenDB.address, { price: price });
-		return price
-	}
+	const tokenAmount = BN(amountOut).times(BN(`1e${(tokenDB.decimals)}`)).integerValue().toString();
+	return amountOut*ethPrice
 }
 
 export async function updateToken(tokenInfo: any) {
@@ -435,23 +407,23 @@ export async function processContractAddress(ctx: any, telegramId: string, chain
 }
 
 export function formatTokenprice(tokenPrice: any, decimals: number = 4, exponentialAfterXZeroes: number = 5) {
-    const BN = getBN();
-    let inputString = BN(tokenPrice).toString();
-    const match = inputString.match(/^(0+)\.?(0*)(\d*)/);
+	const BN = getBN();
+	let inputString = BN(tokenPrice).toString();
+	const match = inputString.match(/^(0+)\.?(0*)(\d*)/);
 
 
-    if (match) {
-        const integerPart = match[1] || '';
-        const leadingZeroes = match[2] || ''
-        const fractionalPart = match[3] || '';
+	if (match) {
+		const integerPart = match[1] || '';
+		const leadingZeroes = match[2] || ''
+		const fractionalPart = match[3] || '';
 
-        const digitsAfterZeroes = fractionalPart.substr(0, decimals);
-        if (leadingZeroes.length >= exponentialAfterXZeroes) {
-            return `$${Number(`${integerPart}.${leadingZeroes}${digitsAfterZeroes}`).toExponential()}`;
-        } else {
-            return currencyFormat().format(Number(`${integerPart}.${leadingZeroes}${digitsAfterZeroes}`));
-        }
-    } else {
-        return currencyFormat().format(BN(tokenPrice).toFixed(decimals))
-    }
+		const digitsAfterZeroes = fractionalPart.substr(0, decimals);
+		if (leadingZeroes.length >= exponentialAfterXZeroes) {
+			return `$${Number(`${integerPart}.${leadingZeroes}${digitsAfterZeroes}`).toExponential()}`;
+		} else {
+			return currencyFormat().format(Number(`${integerPart}.${leadingZeroes}${digitsAfterZeroes}`));
+		}
+	} else {
+		return currencyFormat().format(BN(tokenPrice).toFixed(decimals))
+	}
 }
